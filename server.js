@@ -8,10 +8,15 @@ app.use(express.json());
 
 const CU = 'https://api.clickup.com/api/v2';
 
+function getToken(req) {
+  return req.headers['x-token'] || req.headers['authorization'] || '';
+}
+
 app.get('/tasks/:listId', async (req, res) => {
   try {
+    const token = getToken(req);
     const r = await fetch(`${CU}/list/${req.params.listId}/task?include_closed=true`, {
-      headers: { Authorization: req.headers['x-token'] }
+      headers: { Authorization: token }
     });
     const d = await r.json();
     res.json(d);
@@ -20,9 +25,10 @@ app.get('/tasks/:listId', async (req, res) => {
 
 app.post('/tasks/:listId', async (req, res) => {
   try {
+    const token = getToken(req);
     const r = await fetch(`${CU}/list/${req.params.listId}/task`, {
       method: 'POST',
-      headers: { Authorization: req.headers['x-token'], 'Content-Type': 'application/json' },
+      headers: { Authorization: token, 'Content-Type': 'application/json' },
       body: JSON.stringify(req.body)
     });
     const d = await r.json();
@@ -32,9 +38,8 @@ app.post('/tasks/:listId', async (req, res) => {
 
 app.get('/user', async (req, res) => {
   try {
-    const r = await fetch(`${CU}/user`, {
-      headers: { Authorization: req.headers['x-token'] }
-    });
+    const token = getToken(req);
+    const r = await fetch(`${CU}/user`, { headers: { Authorization: token } });
     const d = await r.json();
     res.json(d);
   } catch(e) { res.status(500).json({ err: e.message }); }
